@@ -1,2 +1,875 @@
-# dayoff
-特休登記
+```html
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>特休登記 ✨ 終極防當機版</title>
+    
+    <!-- iOS Web App Settings -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body {
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        @keyframes slide-up {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .animate-slide-up {
+            animation: slide-up 0.3s ease-out forwards;
+        }
+        
+        /* 載入失敗時的提示樣式 */
+        #error-fallback {
+            display: none;
+            font-family: sans-serif;
+            padding: 30px;
+            max-width: 450px;
+            margin: 50px auto;
+            border: 4px solid black;
+            background-color: white;
+            box-shadow: 6px 6px 0px black;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- 備用引導：如果 React/Babel 載入失敗，會顯示此區塊 -->
+    <div id="error-fallback">
+        <h2 style="font-weight: 900; font-size: 20px; color: #f97316; margin-bottom: 15px;">⚠️ 偵測到瀏覽器阻擋載入</h2>
+        <p style="font-size: 14px; line-height: 1.6; color: #333;">
+            這是因為部分瀏覽器出於安全性考量，禁止本地檔案 (<code style="background:#eee;padding:2px 4px;">file://</code>) 執行遠端腳本。
+        </p>
+        <div style="background: #f3f4f6; padding: 15px; margin-top: 15px; border: 2px solid black;">
+            <p style="font-weight: bold; font-size: 13px; margin-bottom: 5px;">💡 解決方法：</p>
+            <ol style="font-size: 13px; line-height: 1.6; padding-left: 20px; margin: 0;">
+                <li>將此檔案上傳到手機，使用 <b>Safari (iOS)</b> 或 <b>Chrome (Android)</b> 打開。</li>
+                <li>或使用 LINE 等通訊軟體，將檔案傳給自己並直接點開。</li>
+                <li>電腦版使用者：可以使用 VS Code 的 <b>Live Server</b> 插件開啟。</li>
+            </ol>
+        </div>
+    </div>
+
+    <div id="root"></div>
+
+    <script type="text/javascript">
+        // 5秒後檢測 React 是否成功渲染，若無則顯示防錯提示
+        setTimeout(() => {
+            if (!document.getElementById('root').innerHTML) {
+                document.getElementById('error-fallback').style.display = 'block';
+            }
+        }, 3000);
+    </script>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+        
+        // --- Gemini API Integration ---
+        const apiKey = ""; 
+
+        const callGemini = async (prompt, systemInstruction = "") => {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: systemInstruction }] }
+            };
+
+            let delay = 1000;
+            for (let i = 0; i < 5; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) throw new Error('API request failed');
+                    const result = await response.json();
+                    return result.candidates?.[0]?.content?.parts?.[0]?.text || "無法取得 AI 回應";
+                } catch (error) {
+                    if (i === 4) throw error;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+        };
+
+        // --- 穩定免載入的內建 SVG 圖標庫 ---
+        const ICONS = {
+            Settings: <g><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></g>,
+            Plus: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />,
+            Minus: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M20 12H4" />,
+            Clock: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />,
+            Save: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />,
+            History: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />,
+            Briefcase: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />,
+            Calculator: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />,
+            FileText: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />,
+            X: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />,
+            Sparkles: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />,
+            Wand2: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />,
+            Loader2: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />,
+            Download: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />,
+            Upload: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+        };
+
+        const Icon = ({ name, size = 24, className = "" }) => {
+            return (
+                <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width={size} 
+                    height={size} 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className={className}
+                >
+                    {ICONS[name] || null}
+                </svg>
+            );
+        };
+
+        // --- 樣式設定 ---
+        const marbleStyle = {
+            backgroundColor: '#f3f4f6',
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E")`,
+        };
+
+        const HARD_SHADOW = "shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]";
+        const CARD_STYLE = `bg-white border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-6 mb-6`;
+        const BTN_PRIMARY = `bg-orange-500 text-black font-black uppercase tracking-wider px-4 py-2 flex items-center justify-center gap-2 ${HARD_SHADOW} hover:bg-orange-400`;
+        const BTN_SECONDARY = `bg-white text-black font-bold px-4 py-2 flex items-center justify-center gap-2 ${HARD_SHADOW} hover:bg-gray-50`;
+        const INPUT_STYLE = "w-full border-2 border-black p-3 font-bold bg-gray-50 focus:outline-none focus:bg-white focus:ring-2 focus:ring-orange-500 transition-colors placeholder-gray-400";
+
+        const DEFAULT_RULES = [
+            { minYear: 0.5, maxYear: 1, days: 3 },
+            { minYear: 1, maxYear: 2, days: 7 },
+            { minYear: 2, maxYear: 3, days: 10 },
+            { minYear: 3, maxYear: 5, days: 14 },
+            { minYear: 5, maxYear: 10, days: 15 },
+            { minYear: 10, maxYear: 999, baseDays: 15, addPerYear: 1, maxDays: 30 }
+        ];
+
+        function LeaveOpsApp() {
+            const [onBoardDate, setOnBoardDate] = useState('');
+            const [workHoursPerDay, setWorkHoursPerDay] = useState(8);
+            const [records, setRecords] = useState([]);
+            const [rules, setRules] = useState(DEFAULT_RULES);
+            const [showSettings, setShowSettings] = useState(false);
+            const [showReport, setShowReport] = useState(false);
+            const [showRecordModal, setShowRecordModal] = useState(false);
+            const [recordType, setRecordType] = useState('use');
+            
+            // AI State
+            const [isGeneratingNote, setIsGeneratingNote] = useState(false);
+            const [isAnalyzing, setIsAnalyzing] = useState(false);
+            const [aiAnalysis, setAiAnalysis] = useState("");
+
+            const [inputDate, setInputDate] = useState(new Date().toISOString().split('T')[0]);
+            const [inputDays, setInputDays] = useState('');
+            const [inputHours, setInputHours] = useState('');
+            const [inputMins, setInputMins] = useState('');
+            const [inputNote, setInputNote] = useState('');
+
+            const fileInputRef = useRef(null);
+
+            useEffect(() => {
+                const savedData = localStorage.getItem('leaveOpsData_v2'); 
+                if (savedData) {
+                    try {
+                        const parsed = JSON.parse(savedData);
+                        setOnBoardDate(parsed.onBoardDate || '');
+                        setWorkHoursPerDay(parsed.workHoursPerDay || 8);
+                        setRules(parsed.rules || DEFAULT_RULES);
+                        
+                        let loadedRecords = parsed.records || [];
+                        if (loadedRecords.length > 0 && loadedRecords[0].rawDays === undefined) {
+                            loadedRecords = loadedRecords.map(r => {
+                                const totalMins = r.minutes || 0;
+                                const d = Math.floor(totalMins / (8 * 60));
+                                const m = totalMins % (8 * 60);
+                                return {
+                                    ...r,
+                                    rawDays: d,
+                                    rawMinutes: m
+                                };
+                            });
+                        }
+                        setRecords(loadedRecords);
+                    } catch(e) { console.error("Load error", e); }
+                }
+                // 成功載入，隱藏錯誤提示
+                document.getElementById('error-fallback').style.display = 'none';
+            }, []);
+
+            useEffect(() => {
+                const dataToSave = { onBoardDate, workHoursPerDay, records, rules };
+                localStorage.setItem('leaveOpsData_v2', JSON.stringify(dataToSave));
+            }, [onBoardDate, workHoursPerDay, records, rules]);
+
+            const calculateTenure = () => {
+                if (!onBoardDate) return { years: 0, text: '尚未設定' };
+                const start = new Date(onBoardDate);
+                const now = new Date();
+                const diffTime = Math.abs(now - start);
+                const diffYears = diffTime / (1000 * 60 * 60 * 24 * 365.25);
+                return { 
+                    val: diffYears, 
+                    text: `${diffYears.toFixed(1)} 年`
+                };
+            };
+
+            const calculateEntitlement = (years) => {
+                const rule = rules.find(r => years >= r.minYear && years < r.maxYear);
+                if (!rule) return 0;
+                
+                if (rule.baseDays) {
+                    const extra = Math.floor(years - 10);
+                    const total = rule.baseDays + (extra * rule.addPerYear);
+                    return Math.min(total, rule.maxDays);
+                }
+                return rule.days;
+            };
+
+            const processedRecords = useMemo(() => {
+                const sorted = [...records].sort((a, b) => {
+                    const dateA = new Date(a.date);
+                    const dateB = new Date(b.date);
+                    if (dateA.getTime() !== dateB.getTime()) return dateA - dateB;
+                    return a.id - b.id;
+                });
+
+                let currentDays = 0;
+                let currentMinutes = 0;
+                const dayMins = workHoursPerDay * 60;
+
+                return sorted.map(r => {
+                    const rDays = parseFloat(r.rawDays) || 0;
+                    const rMins = parseFloat(r.rawMinutes) || 0;
+
+                    if (r.type === 'add') {
+                        currentDays += rDays;
+                        currentMinutes += rMins;
+                    } else {
+                        currentDays -= rDays;
+                        currentMinutes -= rMins;
+                        while (currentMinutes < 0 && currentDays > 0) {
+                            currentDays--;
+                            currentMinutes += dayMins;
+                        }
+                    }
+
+                    const formatMins = Math.floor(currentMinutes % 60);
+                    const formatHrs = Math.floor(currentMinutes / 60);
+                    
+                    return {
+                        ...r,
+                        balanceSnapshot: {
+                            d: currentDays,
+                            h: formatHrs,
+                            m: formatMins,
+                        }
+                    };
+                });
+            }, [records, workHoursPerDay]);
+
+            const currentBalance = processedRecords.length > 0 
+                ? processedRecords[processedRecords.length - 1].balanceSnapshot 
+                : { d: 0, h: 0, m: 0 };
+
+            const tenure = calculateTenure();
+            const entitlementDays = calculateEntitlement(tenure.val || 0);
+
+            // --- AI Features ---
+            const generateAiNote = async () => {
+                if (!inputNote.trim()) return;
+                setIsGeneratingNote(true);
+                try {
+                    const prompt = `使用者輸入了這個請假/入帳摘要關鍵字：「${inputNote}」。請將其轉換成一段簡短、體面、專業的備註（不超過 15 個字）。如果是請假，語氣要委婉；如果是獲得假期，請說明原因。`;
+                    const systemMsg = "你是一個專業的人事行政助理，擅長撰寫精簡的假別備註。只輸出備註文字，不要有額外對話。";
+                    const result = await callGemini(prompt, systemMsg);
+                    setInputNote(result.trim().replace(/^"|"$/g, ''));
+                } catch (e) {
+                    console.error("AI Note generation failed", e);
+                } finally {
+                    setIsGeneratingNote(false);
+                }
+            };
+
+            const analyzeRecords = async () => {
+                setIsAnalyzing(true);
+                setAiAnalysis("");
+                try {
+                    const summary = processedRecords.map(r => `${r.date} ${r.type === 'add' ? '+' : '-'}${r.rawDays}d : ${r.note}`).join('\n');
+                    const prompt = `這是我的特休紀錄：\n${summary}\n目前餘額：${currentBalance.d}天${currentBalance.h}小時。\n請針對我的請假規律進行簡短分析，並給予一個關於工作平衡或假期規劃的具體建議。請用繁體中文。`;
+                    const systemMsg = "你是一個資深的職涯與健康顧問。你的風格是幽默、富有洞察力且溫暖的。分析要短而精煉。";
+                    const result = await callGemini(prompt, systemMsg);
+                    setAiAnalysis(result);
+                } catch (e) {
+                    setAiAnalysis("分析失敗，請稍後再試。");
+                } finally {
+                    setIsAnalyzing(false);
+                }
+            };
+
+            const handleAddRecord = () => {
+                const days = parseFloat(inputDays) || 0;
+                const hrs = parseFloat(inputHours) || 0;
+                const mins = parseFloat(inputMins) || 0;
+                
+                if (days === 0 && hrs === 0 && mins === 0) return;
+
+                const totalInputMinutes = (hrs * 60) + mins;
+
+                const newRecord = {
+                    id: Date.now(),
+                    type: recordType,
+                    rawDays: days,
+                    rawMinutes: totalInputMinutes,
+                    date: inputDate,
+                    note: inputNote || (recordType === 'add' ? '獲得特休' : '申請特休'),
+                    createdAt: new Date().toISOString()
+                };
+
+                setRecords([...records, newRecord]);
+                setShowRecordModal(false);
+                resetForm();
+            };
+
+            const deleteRecord = (id) => {
+                if (window.confirm('確定要刪除這筆紀錄嗎？')) {
+                    setRecords(records.filter(r => r.id !== id));
+                }
+            };
+
+            const resetForm = () => {
+                setInputDays('');
+                setInputHours('');
+                setInputMins('');
+                setInputNote('');
+                setInputDate(new Date().toISOString().split('T')[0]);
+            };
+
+            const quickAddEntitlement = () => {
+                if (window.confirm(`確定要將依年資計算的 ${entitlementDays} 天加入餘額嗎？`)) {
+                    const newRecord = {
+                        id: Date.now(),
+                        type: 'add',
+                        rawDays: entitlementDays,
+                        rawMinutes: 0,
+                        date: new Date().toISOString().split('T')[0],
+                        note: `年度特休發放 (年資 ${tenure.text})`,
+                        createdAt: new Date().toISOString()
+                    };
+                    setRecords([...records, newRecord]);
+                }
+            };
+
+            // --- Backup & Restore Features ---
+            const exportBackup = () => {
+                const backupData = {
+                    version: "v2-backup",
+                    onBoardDate,
+                    workHoursPerDay,
+                    records,
+                    rules,
+                    exportedAt: new Date().toISOString()
+                };
+                
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", dataStr);
+                const dateTag = new Date().toISOString().split('T')[0];
+                downloadAnchor.setAttribute("download", `特休登記備份_${dateTag}.json`);
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                downloadAnchor.remove();
+            };
+
+            const triggerFileSelect = () => {
+                fileInputRef.current.click();
+            };
+
+            const importBackup = (event) => {
+                const fileObj = event.target.files[0];
+                if (!fileObj) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const importedData = JSON.parse(e.target.result);
+                        if (importedData.records === undefined || importedData.onBoardDate === undefined) {
+                            throw new Error("無效的備份檔案格式");
+                        }
+
+                        if (window.confirm("確認導入備份？這將會覆蓋您目前在此瀏覽器中的所有紀錄！")) {
+                            setOnBoardDate(importedData.onBoardDate || '');
+                            setWorkHoursPerDay(importedData.workHoursPerDay || 8);
+                            setRules(importedData.rules || DEFAULT_RULES);
+                            setRecords(importedData.records || []);
+                            alert("資料導入成功！");
+                        }
+                    } catch (err) {
+                        alert("導入失敗：無法讀取檔案。請確認您選擇的是由本 App 導出的 JSON 檔案。");
+                        console.error(err);
+                    }
+                };
+                reader.readAsText(fileObj);
+                event.target.value = '';
+            };
+
+            return (
+                <div className="min-h-screen font-sans text-gray-900 pb-20 safe-area-inset-bottom" style={marbleStyle}>
+                    
+                    {/* Header */}
+                    <header className="bg-black text-white p-4 border-b-4 border-orange-500 sticky top-0 z-10 shadow-lg pt-safe-top">
+                        <div className="max-w-md mx-auto flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                                <div className="bg-orange-500 text-black p-1 font-black text-xl border-2 border-white leading-none">HR</div>
+                                <div>
+                                    <h1 className="text-xl font-bold tracking-widest uppercase leading-none">特休登記</h1>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-3">
+                                <div className="text-right">
+                                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">剩餘</div>
+                                    <div className="font-mono font-bold text-orange-400 text-base leading-none">
+                                        {currentBalance.d}d {currentBalance.h}h {currentBalance.m}m
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-1">
+                                    <button 
+                                        onClick={() => setShowReport(true)}
+                                        className="p-2 hover:bg-gray-800 rounded border border-gray-700 transition-colors text-white"
+                                        title="年度報表"
+                                    >
+                                        <Icon name="FileText" size={20} />
+                                    </button>
+                                    <button 
+                                        onClick={() => setShowSettings(!showSettings)}
+                                        className="p-2 hover:bg-gray-800 rounded border border-gray-700 transition-colors"
+                                    >
+                                        <Icon name="Settings" size={20} className={showSettings ? "text-orange-500" : "text-white"} />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div className="max-w-md mx-auto p-4 pt-8">
+
+                        {/* Balance */}
+                        <div className={CARD_STYLE}>
+                            <div className="flex justify-between items-start mb-2">
+                                <span className="bg-black text-white px-2 py-1 text-xs font-bold tracking-widest">CURRENT BALANCE</span>
+                                <Icon name="Clock" size={20} className="text-gray-400" />
+                            </div>
+                            
+                            <div className="flex items-baseline justify-center gap-2 my-4">
+                                {currentBalance.d < 0 && <span className="text-4xl font-black text-red-600">-</span>}
+                                <div className="text-center">
+                                    <span className="text-6xl font-black text-gray-900 drop-shadow-sm">{currentBalance.d}</span>
+                                    <span className="text-xs font-bold text-gray-500 block uppercase tracking-wider">Days</span>
+                                </div>
+                                <span className="text-4xl text-gray-300 font-light">/</span>
+                                <div className="text-center">
+                                    <span className="text-4xl font-black text-gray-700">{currentBalance.h}</span>
+                                    <span className="text-xs font-bold text-gray-500 block uppercase tracking-wider">Hrs</span>
+                                </div>
+                                <span className="text-2xl text-gray-300 font-light">/</span>
+                                <div className="text-center">
+                                    <span className="text-2xl font-black text-gray-500">{currentBalance.m}</span>
+                                    <span className="text-xs font-bold text-gray-400 block uppercase tracking-wider">Mins</span>
+                                </div>
+                            </div>
+
+                            <div className="mt-6 grid grid-cols-2 gap-4">
+                                <button 
+                                    onClick={() => { setRecordType('use'); setShowRecordModal(true); }}
+                                    className={`${BTN_PRIMARY} bg-white text-black hover:bg-gray-100 touch-manipulation`}
+                                >
+                                    <Icon name="Minus" size={20} /> 登記使用
+                                </button>
+                                <button 
+                                    onClick={() => { setRecordType('add'); setShowRecordModal(true); }}
+                                    className={`${BTN_PRIMARY} touch-manipulation`}
+                                >
+                                    <Icon name="Plus" size={20} /> 新增/補休
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Info Card */}
+                        <div className={`${CARD_STYLE} relative overflow-hidden group`}>
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-orange-500 rotate-45 translate-x-8 -translate-y-8 border-l-2 border-b-2 border-black"></div>
+                            
+                            <h2 className="text-lg font-black uppercase mb-4 flex items-center gap-2">
+                                <Icon name="Calculator" size={20} /> 應得特休試算
+                            </h2>
+                            
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center border-b-2 border-gray-200 pb-2">
+                                    <span className="text-gray-500 font-bold text-sm">您的到職日期</span>
+                                    <span className="font-mono font-bold text-lg">
+                                        {onBoardDate || <button onClick={()=>setShowSettings(true)} className="text-red-500 text-sm underline">點此設定</button>}
+                                    </span>
+                                </div>
+                                
+                                <div className="flex justify-between items-center border-b-2 border-gray-200 pb-2">
+                                    <span className="text-gray-500 font-bold text-sm">目前累積年資</span>
+                                    <span className="font-mono font-bold text-lg text-black">{tenure.text}</span>
+                                </div>
+
+                                <div className="bg-orange-50 p-3 border-2 border-orange-200 flex flex-col gap-2">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-orange-800 font-bold text-sm flex items-center gap-1">
+                                            <Icon name="Briefcase" size={14} /> 依法規今年應有
+                                        </span>
+                                        <span className="font-mono font-black text-2xl text-orange-600">{entitlementDays} <span className="text-sm font-bold">天</span></span>
+                                    </div>
+                                    
+                                    {onBoardDate && (
+                                        <button 
+                                            onClick={quickAddEntitlement}
+                                            className="w-full text-xs bg-black text-white py-2 font-bold uppercase tracking-wider hover:bg-gray-800 border border-black shadow-[2px_2px_0px_0px_rgba(100,100,100,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none flex items-center justify-center gap-1 touch-manipulation"
+                                        >
+                                            <Icon name="Plus" size={12} /> 將 {entitlementDays} 天加入餘額
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* History */}
+                        <div className="mb-20">
+                            <h3 className="text-lg font-black uppercase mb-4 flex items-center gap-2 pl-2 border-l-4 border-orange-500">
+                                <Icon name="History" size={20} /> 使用紀錄
+                            </h3>
+                            
+                            <div className="space-y-3">
+                                {processedRecords.length === 0 && (
+                                    <div className="text-center py-8 text-gray-400 font-bold bg-white border-2 border-dashed border-gray-300">
+                                        尚無紀錄
+                                    </div>
+                                )}
+                                {[...processedRecords].reverse().map(record => {
+                                    const isAdd = record.type === 'add';
+                                    const rDays = record.rawDays;
+                                    const rHrs = Math.floor(record.rawMinutes / 60);
+                                    const rMins = record.rawMinutes % 60;
+                                    const balance = record.balanceSnapshot;
+
+                                    return (
+                                        <div key={record.id} className="bg-white border-2 border-black p-3 shadow-[3px_3px_0px_0px_rgba(0,0,0,0.15)]">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div className="flex items-start gap-3">
+                                                    <div className={`p-2 border-2 border-black ${isAdd ? 'bg-orange-500 text-black' : 'bg-black text-white'}`}>
+                                                        {isAdd ? <Icon name="Plus" size={16} /> : <Icon name="Minus" size={16} />}
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-bold text-sm">{record.note}</div>
+                                                        <div className="text-xs text-gray-500 font-mono">{record.date}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className={`font-black text-lg ${isAdd ? 'text-orange-600' : 'text-black'}`}>
+                                                        {isAdd ? '+' : '-'}
+                                                        {rDays > 0 && `${rDays}d `}
+                                                        {(rHrs > 0 || rMins > 0) && `${rHrs}h`}
+                                                        {rMins > 0 && ` ${rMins}m`}
+                                                    </div>
+                                                    <button 
+                                                        onClick={() => deleteRecord(record.id)}
+                                                        className="text-xs text-red-400 underline hover:text-red-600 mt-1 touch-manipulation"
+                                                    >
+                                                        刪除
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="mt-2 pt-2 border-t border-dashed border-gray-300 flex justify-end items-center gap-2">
+                                                <span className="text-[10px] text-gray-400 font-bold uppercase">結餘</span>
+                                                <span className="font-mono text-sm font-bold text-gray-700">
+                                                    {balance.d}d {balance.h}h {balance.m > 0 && `${balance.m}m`}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Report Modal */}
+                    {showReport && (
+                        <div className="fixed inset-0 bg-white z-[60] overflow-y-auto p-4 sm:p-8">
+                            <div className="max-w-2xl mx-auto border-4 border-black min-h-screen sm:min-h-[auto] bg-white p-4">
+                                <div className="flex justify-between items-center mb-8 border-b-4 border-black pb-4">
+                                    <div>
+                                        <h2 className="text-3xl font-black uppercase tracking-wider">年度特休報表</h2>
+                                        <p className="text-sm font-mono text-gray-500 mt-1">GENERATED ON {new Date().toLocaleDateString()}</p>
+                                    </div>
+                                    <button onClick={() => setShowReport(false)} className="bg-black text-white p-2 hover:bg-gray-800">
+                                        <Icon name="X" size={24} />
+                                    </button>
+                                </div>
+
+                                {/* AI Analysis Section */}
+                                <div className="mb-8 border-2 border-purple-500 bg-purple-50 p-4 relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 p-2 text-purple-200">
+                                        <Icon name="Sparkles" size={48} />
+                                    </div>
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h3 className="font-black text-purple-900 flex items-center gap-2">
+                                            <Icon name="Wand2" size={20} /> ✨ 智慧請假分析
+                                        </h3>
+                                        <button 
+                                            onClick={analyzeRecords}
+                                            disabled={isAnalyzing}
+                                            className={`px-3 py-1 bg-purple-600 text-white text-xs font-bold uppercase tracking-widest flex items-center gap-2 ${HARD_SHADOW} hover:bg-purple-500 disabled:opacity-50`}
+                                        >
+                                            {isAnalyzing ? <Icon name="Loader2" className="animate-spin" size={14} /> : "開始分析"}
+                                        </button>
+                                    </div>
+                                    {aiAnalysis ? (
+                                        <div className="text-sm leading-relaxed text-purple-800 whitespace-pre-wrap font-medium">
+                                            {aiAnalysis}
+                                        </div>
+                                    ) : (
+                                        <div className="text-xs text-purple-400 italic">點擊按鈕，讓 AI 為您的假期規劃提供建議...</div>
+                                    )}
+                                </div>
+
+                                {/* Report Summary */}
+                                <div className="grid grid-cols-2 gap-4 mb-8">
+                                    <div className="border-2 border-black p-4 bg-gray-50">
+                                        <div className="text-xs font-bold text-gray-500 uppercase">目前結餘 (Balance)</div>
+                                        <div className="text-2xl font-black mt-1 text-orange-600">
+                                            {currentBalance.d}d {currentBalance.h}h {currentBalance.m}m
+                                        </div>
+                                    </div>
+                                    <div className="border-2 border-black p-4 bg-gray-50">
+                                        <div className="text-xs font-bold text-gray-500 uppercase">總筆數 (Records)</div>
+                                        <div className="text-2xl font-black mt-1">
+                                            {records.length} <span className="text-sm text-gray-500">筆</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Report Table */}
+                                <div className="overflow-x-auto">
+                                    <table className="w-full border-collapse text-left text-sm font-mono">
+                                        <thead>
+                                            <tr className="bg-black text-white">
+                                                <th className="p-2 border border-black w-5/12">日期 / 摘要</th>
+                                                <th className="p-2 border border-black text-right w-3/12">異動</th>
+                                                <th className="p-2 border border-black text-right w-4/12">結餘</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {processedRecords.length === 0 ? (
+                                                <tr><td colSpan="3" className="p-8 text-center border border-black text-gray-400">尚無資料</td></tr>
+                                            ) : (
+                                                [...processedRecords].map((r, idx) => {
+                                                     const isAdd = r.type === 'add';
+                                                     const rDays = r.rawDays;
+                                                     const rHrs = Math.floor(r.rawMinutes / 60);
+                                                     const rMins = r.rawMinutes % 60;
+                                                     return (
+                                                        <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                                            <td className="p-2 border border-black align-top">
+                                                                <div className="font-bold text-base mb-1">{r.date}</div>
+                                                                <div className="flex items-start gap-2 text-sm text-gray-600">
+                                                                    <span className={`flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full font-black text-xs ${isAdd ? 'bg-orange-500 text-black' : 'bg-black text-white'}`}>
+                                                                        {isAdd ? '+' : '-'}
+                                                                    </span>
+                                                                    <span>{r.note}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td className={`p-2 border border-black text-right font-bold align-top whitespace-nowrap ${isAdd ? 'text-orange-600' : 'text-black'}`}>
+                                                                {isAdd ? '+' : '-'}{rDays > 0 && `${rDays}d`}{ (rHrs > 0 || rMins > 0) && ` ${rHrs}h${rMins>0?`:${rMins}`:''}`}
+                                                            </td>
+                                                            <td className="p-2 border border-black text-right align-top whitespace-nowrap text-gray-500">
+                                                                {r.balanceSnapshot.d}d {r.balanceSnapshot.h}h
+                                                            </td>
+                                                        </tr>
+                                                     );
+                                                })
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div className="mt-8 text-center text-xs text-gray-400 border-t-2 border-gray-200 pt-4">
+                                    --- END OF REPORT ---
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Settings Modal */}
+                    {showSettings && (
+                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                            <div className={`w-full max-w-md bg-white border-4 border-orange-500 p-6 max-h-[85vh] overflow-y-auto ${HARD_SHADOW}`}>
+                                <div className="flex justify-between items-center mb-6 border-b-2 border-black pb-4">
+                                    <h2 className="text-2xl font-black uppercase">系統設定</h2>
+                                    <button onClick={() => setShowSettings(false)} className="text-black hover:rotate-90 transition-transform">
+                                        <Icon name="X" size={32} />
+                                    </button>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <section>
+                                        <label className="block font-bold text-sm mb-2 uppercase tracking-wide">到職日期</label>
+                                        <input 
+                                            type="date" 
+                                            value={onBoardDate} 
+                                            onChange={(e) => setOnBoardDate(e.target.value)} 
+                                            className={INPUT_STYLE}
+                                        />
+                                    </section>
+                                    <section>
+                                        <label className="block font-bold text-sm mb-2 uppercase tracking-wide">每日工時 (換算標準)</label>
+                                        <div className="flex items-center gap-2">
+                                            <input 
+                                                type="number" 
+                                                value={workHoursPerDay} 
+                                                onChange={(e) => setWorkHoursPerDay(Number(e.target.value))} 
+                                                className={INPUT_STYLE}
+                                            />
+                                            <span className="font-bold">小時</span>
+                                        </div>
+                                    </section>
+
+                                    {/* Backup & Restore Panel */}
+                                    <section className="bg-black text-white p-4 border-2 border-black">
+                                        <h3 className="font-black text-sm uppercase tracking-wide mb-3 flex items-center gap-2 text-orange-500">
+                                            <Icon name="Save" size={16} /> 數據備份與移轉
+                                        </h3>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <button 
+                                                onClick={exportBackup}
+                                                className="bg-orange-500 text-black font-bold py-2 text-xs uppercase flex items-center justify-center gap-1 hover:bg-orange-400 active:translate-x-[1px] active:translate-y-[1px]"
+                                            >
+                                                <Icon name="Download" size={14} /> 導出備份
+                                            </button>
+                                            <button 
+                                                onClick={triggerFileSelect}
+                                                className="bg-white text-black font-bold py-2 text-xs uppercase flex items-center justify-center gap-1 hover:bg-gray-200 active:translate-x-[1px] active:translate-y-[1px]"
+                                            >
+                                                <Icon name="Upload" size={14} /> 導入還原
+                                            </button>
+                                        </div>
+                                        <input 
+                                            type="file" 
+                                            ref={fileInputRef} 
+                                            onChange={importBackup} 
+                                            accept=".json" 
+                                            className="hidden" 
+                                        />
+                                        <p className="text-[10px] text-gray-400 mt-2 text-center">
+                                            * 資料導出為 JSON 檔案，可在其他裝置上導入還原。
+                                        </p>
+                                    </section>
+
+                                    <div className="mt-8">
+                                        <button onClick={() => setShowSettings(false)} className={`${BTN_PRIMARY} w-full touch-manipulation`}>
+                                            <Icon name="Save" size={20} /> 儲存設定
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Record Modal */}
+                    {showRecordModal && (
+                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+                            <div className={`w-full max-w-md bg-white border-t-4 sm:border-4 ${recordType === 'add' ? 'border-orange-500' : 'border-black'} p-6 animate-slide-up sm:animate-none`}>
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-2xl font-black uppercase flex items-center gap-2">
+                                        {recordType === 'add' ? <Icon name="Plus" className="text-orange-500" /> : <Icon name="Minus" />}
+                                        {recordType === 'add' ? '新增/獲得' : '使用特休'}
+                                    </h2>
+                                    <button onClick={() => setShowRecordModal(false)} className="text-black">
+                                        <Icon name="X" size={32} />
+                                    </button>
+                                </div>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block font-bold text-sm mb-1">日期</label>
+                                        <input type="date" value={inputDate} onChange={(e) => setInputDate(e.target.value)} className={INPUT_STYLE} />
+                                    </div>
+                                    <div className="flex gap-4">
+                                        <div className="flex-1">
+                                            <label className="block font-bold text-sm mb-1">天數</label>
+                                            <input type="number" placeholder="0" value={inputDays} onChange={(e) => setInputDays(e.target.value)} className={INPUT_STYLE} />
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className="block font-bold text-sm mb-1">小時</label>
+                                            <input type="number" placeholder="0" value={inputHours} onChange={(e) => setInputHours(e.target.value)} className={INPUT_STYLE} />
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className="block font-bold text-sm mb-1">分鐘</label>
+                                            <input type="number" placeholder="0" value={inputMins} onChange={(e) => setInputMins(e.target.value)} className={INPUT_STYLE} />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block font-bold text-sm mb-1 flex justify-between">
+                                            備註
+                                            <button 
+                                                onClick={generateAiNote}
+                                                disabled={isGeneratingNote || !inputNote.trim()}
+                                                className="text-xs text-purple-600 font-bold hover:text-purple-800 disabled:text-gray-400 flex items-center gap-1 transition-colors"
+                                            >
+                                                {isGeneratingNote ? <Icon name="Loader2" size={12} className="animate-spin" /> : <Icon name="Sparkles" size={12} />}
+                                                ✨ 智慧優化
+                                            </button>
+                                        </label>
+                                        <input 
+                                            type="text" 
+                                            placeholder="例：感冒、出國..." 
+                                            value={inputNote} 
+                                            onChange={(e) => setInputNote(e.target.value)} 
+                                            className={INPUT_STYLE} 
+                                        />
+                                    </div>
+                                    <div className="pt-4 grid grid-cols-2 gap-4">
+                                        <button onClick={() => setShowRecordModal(false)} className={`${BTN_SECONDARY} touch-manipulation`}>取消</button>
+                                        <button onClick={handleAddRecord} className={`${BTN_PRIMARY} touch-manipulation`}>確認</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<LeaveOpsApp />);
+    </script>
+</body>
+</html>
+
+```
