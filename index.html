@@ -1,191 +1,319 @@
-```html
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>特休登記 ✨ 終極相容版</title>
+    <title>特休登記 ✨ 自動備份版</title>
     
     <!-- iOS Web App Settings -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=no">
     
-    <!-- Tailwind CSS (唯一需要的外部樣式庫，載入極快) -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap');
+        
+        :root {
+            --bg-color: #e6e9ef;
+            --surface-gradient: linear-gradient(145deg, #ffffff, #d3d6dc);
+            --surface-pressed: linear-gradient(145deg, #d3d6dc, #ffffff);
+            --shadow-out: 8px 8px 16px #c4c7cc, -8px -8px 16px #ffffff;
+            --shadow-out-sm: 4px 4px 8px #c4c7cc, -4px -4px 8px #ffffff;
+            --shadow-in: inset 3px 3px 6px #c4c7cc, inset -3px -3px 6px #ffffff;
+            --shadow-in-deep: inset 5px 5px 10px #b8bbbf, inset -5px -5px 10px #ffffff;
+            --bevel-border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
         body {
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: #334155;
             -webkit-user-select: none;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
+
+        /* 霧面塑膠立體卡片 */
+        .skeuo-card {
+            background: linear-gradient(145deg, #f0f3f8, #d9dce1);
+            box-shadow: var(--shadow-out);
+            border-radius: 20px;
+            border: var(--bevel-border);
+            position: relative;
+        }
+
+        /* 凸起按鈕 */
+        .skeuo-btn {
+            background: linear-gradient(145deg, #ffffff, #dcdfe4);
+            box-shadow: var(--shadow-out-sm);
+            border-radius: 12px;
+            border: var(--bevel-border);
+            transition: all 0.15s ease;
+        }
+        .skeuo-btn:active {
+            background: linear-gradient(145deg, #dcdfe4, #ffffff);
+            box-shadow: var(--shadow-in);
+            transform: translateY(1px);
+        }
+
+        /* 彩色主按鈕 (橘色實體鍵) */
+        .skeuo-btn-primary {
+            background: linear-gradient(145deg, #ff711c, #e14d00);
+            box-shadow: 4px 4px 10px rgba(225, 77, 0, 0.4), -3px -3px 8px rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            text-shadow: 0 -1px 1px rgba(0,0,0,0.3);
+        }
+        .skeuo-btn-primary:active {
+            background: linear-gradient(145deg, #e14d00, #ff711c);
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.4), inset -2px -2px 5px rgba(255,255,255,0.2);
+        }
+
+        /* 青色主按鈕 */
+        .skeuo-btn-cyan {
+            background: linear-gradient(145deg, #22d3ee, #0891b2);
+            box-shadow: 4px 4px 10px rgba(8, 145, 178, 0.4), -3px -3px 8px rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            text-shadow: 0 -1px 1px rgba(0,0,0,0.3);
+        }
+        .skeuo-btn-cyan:active {
+            background: linear-gradient(145deg, #0891b2, #22d3ee);
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.4), inset -2px -2px 5px rgba(255,255,255,0.2);
+        }
+
+        /* 內凹雕刻輸入框與容器 */
+        .skeuo-inset {
+            background: #e0e3e8;
+            box-shadow: var(--shadow-in);
+            border-radius: 12px;
+            border: 1px solid rgba(200, 203, 208, 0.6);
+        }
+
+        /* 實體螺絲點綴 */
+        .screw-head {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #b0b3b8, #ffffff);
+            box-shadow: inset 1px 1px 1px rgba(0,0,0,0.5), 1px 1px 1px rgba(255,255,255,0.8);
+            position: relative;
+        }
+        .screw-head::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 1px;
+            width: 6px;
+            height: 1px;
+            background: #666;
+            transform: rotate(45deg);
+        }
+
+        /* 刻度線裝飾 */
+        .ruler-marks {
+            background-image: repeating-linear-gradient(90deg, #94a3b8 0, #94a3b8 1px, transparent 0, transparent 8px);
+            height: 6px;
+            opacity: 0.5;
+        }
+
         @keyframes slide-up {
             from { transform: translateY(100%); }
             to { transform: translateY(0); }
         }
         .animate-slide-up {
-            animation: slide-up 0.3s ease-out forwards;
+            animation: slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen font-sans text-gray-900 pb-20" style="background-color: #f3f4f6; background-image: url(&quot;data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E&quot;);">
+<body class="min-h-screen pb-20">
 
-    <!-- --- Header --- -->
-    <header class="bg-black text-white p-4 border-b-4 border-orange-500 sticky top-0 z-10 shadow-lg">
+    <!-- --- Header (實體儀表頂列) --- -->
+    <header class="sticky top-0 z-30 px-4 py-3 bg-[#e6e9ef]/90 backdrop-blur-md border-b border-white/60 shadow-[0_4px_12px_rgba(196,199,204,0.6)]">
         <div class="max-w-md mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <div class="bg-orange-500 text-black p-1 font-black text-xl border-2 border-white leading-none">HR</div>
-                <h1 class="text-xl font-bold tracking-widest uppercase leading-none">特休登記</h1>
-            </div>
             <div class="flex items-center gap-3">
-                <div class="text-right">
-                    <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">剩餘</div>
-                    <div id="header-remaining" class="font-mono font-bold text-orange-400 text-base leading-none">0d 0h 0m</div>
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs text-slate-700 skeuo-btn">
+                    HR
                 </div>
-                <div class="flex gap-1">
-                    <button onclick="toggleReport(true)" class="p-2 hover:bg-gray-800 rounded border border-gray-700 text-white" title="年度報表">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    </button>
-                    <button onclick="toggleSettings(true)" class="p-2 hover:bg-gray-800 rounded border border-gray-700 text-white" title="系統設定">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                    </button>
+                <div>
+                    <h1 class="text-base font-black tracking-wide text-slate-800 drop-shadow-[0_1px_0_rgba(255,255,255,0.8)]">特休登記系統</h1>
+                    <!-- 自動備份狀態文字提示 -->
+                    <div id="sync-status" class="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full skeuo-inset text-slate-600 inline-block">未連結 GAS</div>
                 </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <div class="px-2.5 py-1 skeuo-inset text-right">
+                    <div class="text-[8px] text-slate-500 font-extrabold uppercase tracking-wider">剩餘時數</div>
+                    <div id="header-remaining" class="font-mono font-black text-slate-800 text-xs">0d 0h 0m</div>
+                </div>
+                <button onclick="toggleReport(true)" class="p-2.5 skeuo-btn text-slate-700" title="年度報表">
+                    <svg class="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </button>
+                <button onclick="toggleSettings(true)" class="p-2.5 skeuo-btn text-slate-700" title="系統設定">
+                    <svg class="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                </button>
             </div>
         </div>
     </header>
 
-    <div class="max-w-md mx-auto p-4 pt-8">
+    <div class="max-w-md mx-auto p-4 pt-6 space-y-6">
 
-        <!-- Balance -->
-        <div class={CARD_STYLE}>
-            <div class="flex justify-between items-start mb-2">
-                <span class="bg-black text-white px-2 py-1 text-xs font-bold tracking-widest">CURRENT BALANCE</span>
-                <span class="text-gray-400">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                </span>
+        <!-- Balance Card (擬物顯示儀表) -->
+        <div class="skeuo-card p-6">
+            <!-- 螺絲孔裝飾 -->
+            <div class="absolute top-3 left-3 screw-head"></div>
+            <div class="absolute top-3 right-3 screw-head"></div>
+
+            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-300/60">
+                <span class="text-[11px] font-black tracking-widest text-slate-500 uppercase">CURRENT BALANCE</span>
+                <span class="text-slate-400 font-mono text-xs">SYS-LCD01</span>
             </div>
-            <div class="flex items-baseline justify-center gap-2 my-4">
-                <span id="balance-neg-sign" class="text-4xl font-black text-red-600 hidden">-</span>
+            
+            <!-- 凹陷 LCD 數位顯示器面板 -->
+            <div class="skeuo-inset p-5 my-4 flex items-baseline justify-center gap-2 relative overflow-hidden bg-gradient-to-b from-[#d5d8de] to-[#e8ebf0]">
+                <div class="absolute top-0 left-0 right-0 h-1 bg-black/10"></div>
+                <span id="balance-neg-sign" class="text-4xl font-black text-red-500 hidden">-</span>
                 <div class="text-center">
-                    <span id="balance-days" class="text-6xl font-black text-gray-900">0</span>
-                    <span class="text-xs font-bold text-gray-500 block uppercase tracking-wider">Days</span>
+                    <span id="balance-days" class="text-6xl font-black text-slate-800 tracking-tight drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">0</span>
+                    <span class="text-[10px] font-extrabold text-slate-500 block uppercase tracking-wider mt-1">Days</span>
                 </div>
-                <span class="text-4xl text-gray-300 font-light">/</span>
+                <span class="text-3xl text-slate-400 font-light">/</span>
                 <div class="text-center">
-                    <span id="balance-hours" class="text-4xl font-black text-gray-700">0</span>
-                    <span class="text-xs font-bold text-gray-500 block uppercase tracking-wider">Hrs</span>
+                    <span id="balance-hours" class="text-4xl font-black text-slate-700">0</span>
+                    <span class="text-[10px] font-extrabold text-slate-500 block uppercase tracking-wider mt-1">Hrs</span>
                 </div>
-                <span class="text-2xl text-gray-300 font-light">/</span>
+                <span class="text-xl text-slate-400 font-light">/</span>
                 <div class="text-center">
-                    <span id="balance-mins" class="text-2xl font-black text-gray-500">0</span>
-                    <span class="text-xs font-bold text-gray-400 block uppercase tracking-wider">Mins</span>
+                    <span id="balance-mins" class="text-2xl font-black text-slate-600">0</span>
+                    <span class="text-[10px] font-extrabold text-slate-500 block uppercase tracking-wider mt-1">Mins</span>
                 </div>
             </div>
-            <div class="mt-6 grid grid-cols-2 gap-4">
-                <button onclick="openRecordModal('use')" class="bg-white text-black font-black uppercase tracking-wider px-4 py-2 flex items-center justify-center gap-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-gray-50">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"/></svg>
+
+            <!-- 實體操作按鍵 -->
+            <div class="grid grid-cols-2 gap-3 pt-2">
+                <button onclick="openRecordModal('use')" class="skeuo-btn-cyan py-3 px-4 rounded-xl font-bold text-sm tracking-wide flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"/></svg>
                     登記使用
                 </button>
-                <button onclick="openRecordModal('add')" class="bg-orange-500 text-black font-black uppercase tracking-wider px-4 py-2 flex items-center justify-center gap-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-orange-400">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                <button onclick="openRecordModal('add')" class="skeuo-btn-primary py-3 px-4 rounded-xl font-bold text-sm tracking-wide flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                     新增/補休
                 </button>
             </div>
         </div>
 
-        <!-- Info Card -->
-        <div class="bg-white border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-6 mb-6 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-16 h-16 bg-orange-500 rotate-45 translate-x-8 -translate-y-8 border-l-2 border-b-2 border-black"></div>
-            <h2 class="text-lg font-black uppercase mb-4 flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                應得特休試算
-            </h2>
-            <div class="space-y-4">
-                <div class="flex justify-between items-center border-b-2 border-gray-200 pb-2">
-                    <span class="text-gray-500 font-bold text-sm">您的到職日期</span>
-                    <span id="info-onboard-date" class="font-mono font-bold text-lg text-black">尚未設定</span>
+        <!-- Info Card (法規試算實體卡) -->
+        <div class="skeuo-card p-6">
+            <div class="flex justify-between items-center border-b border-slate-300/60 pb-3 mb-4">
+                <h2 class="text-sm font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                    <svg class="w-4 h-4 text-slate-500 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    應得特休試算
+                </h2>
+                <span class="text-[9px] font-black text-slate-400 bg-slate-200 px-2 py-0.5 rounded-full shadow-inner">STATUTORY</span>
+            </div>
+
+            <div class="space-y-3">
+                <div class="flex justify-between items-center p-3 skeuo-inset">
+                    <span class="text-xs font-bold text-slate-500 uppercase">到職日期</span>
+                    <span id="info-onboard-date" class="font-mono font-extrabold text-sm text-slate-700">尚未設定</span>
                 </div>
-                <div class="flex justify-between items-center border-b-2 border-gray-200 pb-2">
-                    <span class="text-gray-500 font-bold text-sm">目前累積年資</span>
-                    <span id="info-tenure" class="font-mono font-bold text-lg text-black">0.0 年</span>
+                
+                <div class="flex justify-between items-center p-3 skeuo-inset">
+                    <span class="text-xs font-bold text-slate-500 uppercase">目前累積年資</span>
+                    <span id="info-tenure" class="font-mono font-extrabold text-sm text-slate-700">0.0 年</span>
                 </div>
-                <div class="bg-orange-50 p-3 border-2 border-orange-200 flex flex-col gap-2">
-                    <div class="flex justify-between items-center">
-                        <span class="text-orange-800 font-bold text-sm flex items-center gap-1">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+
+                <div class="p-4 rounded-xl bg-gradient-to-br from-amber-100/80 to-amber-200/50 border border-amber-300/60 shadow-[inset_2px_2px_4px_rgba(255,255,255,0.8),2px_2px_6px_rgba(0,0,0,0.05)]">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-extrabold text-amber-900 uppercase flex items-center gap-1">
                             依法規今年應有
                         </span>
-                        <span id="info-entitlement" class="font-mono font-black text-2xl text-orange-600">0 <span class="text-sm font-bold">天</span></span>
+                        <span id="info-entitlement" class="font-mono font-black text-2xl text-amber-900">0 <span class="text-xs">天</span></span>
                     </div>
                     
                     <button 
                         id="btn-quick-add"
                         onclick="quickAddEntitlement()"
-                        class="w-full text-xs bg-black text-white py-2 font-bold uppercase tracking-wider hover:bg-gray-800 border border-black shadow-[2px_2px_0px_0px_rgba(100,100,100,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none flex items-center justify-center gap-1 touch-manipulation hidden"
+                        class="w-full mt-2 skeuo-btn bg-amber-400 text-amber-950 text-xs py-2.5 font-black uppercase tracking-wider hidden hover:brightness-105 flex items-center justify-center gap-1"
                     >
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                        <svg class="w-3.5 h-3.5 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                         將此天數加入餘額
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- History List -->
-        <div class="mb-20">
-            <h3 class="text-lg font-black uppercase mb-4 flex items-center gap-2 pl-2 border-l-4 border-orange-500">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                使用紀錄
-            </h3>
+        <!-- History List (歷史紀錄清單) -->
+        <div>
+            <div class="flex items-center justify-between mb-3 px-1">
+                <h3 class="text-xs font-black uppercase text-slate-500 tracking-wider flex items-center gap-1.5">
+                    <svg class="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    使用紀錄歷史
+                </h3>
+            </div>
             <div id="history-container" class="space-y-3">
-                <!-- 動態注入的歷史紀錄將置於此 -->
+                <!-- 動態注入歷史紀錄卡片 -->
             </div>
         </div>
-    </main>
+    </div>
 
-    <!-- --- Settings Modal --- -->
-    <div id="settings-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="w-full max-w-md bg-white border-4 border-orange-500 p-6 max-h-[85vh] overflow-y-auto shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black animate-slide-up sm:animate-none">
-            <div class="flex justify-between items-center mb-6 border-b-2 border-black pb-4">
-                <h2 class="text-2xl font-black uppercase">系統設定</h2>
-                <button onclick="toggleSettings(false)" class="text-black">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    <!-- --- Settings Modal (實體彈窗) --- -->
+    <div id="settings-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="w-full max-w-md skeuo-card bg-[#e6e9ef] p-6 max-h-[90vh] overflow-y-auto animate-slide-up sm:animate-none">
+            <div class="flex justify-between items-center mb-6 border-b border-slate-300 pb-3">
+                <h2 class="text-lg font-black text-slate-800 uppercase tracking-wide">系統參數設定</h2>
+                <button onclick="toggleSettings(false)" class="p-2 skeuo-btn text-slate-600">
+                    <svg class="w-4 h-4 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            <div class="space-y-6">
+            
+            <div class="space-y-5">
                 <section>
-                    <label class="block font-bold text-sm mb-2 uppercase tracking-wide">到職日期</label>
-                    <input type="date" id="settings-onboard" class="w-full border-2 border-black p-3 font-bold bg-gray-50 focus:outline-none focus:bg-white focus:ring-2 focus:ring-orange-500 transition-colors" />
+                    <label class="block font-bold text-xs text-slate-600 mb-1.5 uppercase">到職日期</label>
+                    <input type="date" id="settings-onboard" class="w-full skeuo-inset p-3 font-bold text-slate-800 text-sm focus:outline-none" />
                 </section>
+
                 <section>
-                    <label class="block font-bold text-sm mb-2 uppercase tracking-wide">每日工時 (換算標準)</label>
+                    <label class="block font-bold text-xs text-slate-600 mb-1.5 uppercase">每日工時 (換算標準)</label>
                     <div class="flex items-center gap-2">
-                        <input type="number" id="settings-hours" class="w-full border-2 border-black p-3 font-bold bg-gray-50 focus:outline-none focus:bg-white focus:ring-2 focus:ring-orange-500 transition-colors" />
-                        <span class="font-bold">小時</span>
+                        <input type="number" id="settings-hours" class="w-full skeuo-inset p-3 font-bold text-slate-800 text-sm focus:outline-none" />
+                        <span class="font-bold text-slate-600 text-sm">小時</span>
                     </div>
                 </section>
-                <section class="bg-black text-white p-4 border-2 border-black">
-                    <h3 class="font-black text-sm uppercase tracking-wide mb-3 flex items-center gap-2 text-orange-500">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-                        數據備份與移轉
+                
+                <!-- Google App Script 自動備份設定區塊 -->
+                <section class="p-4 skeuo-inset bg-slate-200/50">
+                    <label class="block font-bold text-xs text-slate-700 mb-1.5 uppercase flex items-center gap-1">
+                        <svg class="w-4 h-4 stroke-[2.5] text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                        Google App Script 備份網址
+                    </label>
+                    <input type="url" id="settings-gas-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full skeuo-inset p-2.5 font-mono text-xs text-slate-800 focus:outline-none mb-2" />
+                    <p class="text-[10px] font-semibold text-slate-500">填入 Web App URL 後，所有資料修改將自動備份至個人 Google 試算表。</p>
+                </section>
+
+                <section class="p-4 skeuo-card">
+                    <h3 class="font-bold text-xs text-slate-600 uppercase mb-3 flex items-center gap-1.5">
+                        <svg class="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                        手動備份與移轉
                     </h3>
                     <div class="grid grid-cols-2 gap-3">
-                        <button onclick="exportBackup()" class="bg-orange-500 text-black font-bold py-2 text-xs uppercase flex items-center justify-center gap-1 hover:bg-orange-400">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                            導出備份
+                        <button onclick="exportBackup()" class="skeuo-btn py-2 text-xs font-bold text-slate-700">
+                            導出備份 JSON
                         </button>
-                        <button onclick="triggerFileSelect()" class="bg-white text-black font-bold py-2 text-xs uppercase flex items-center justify-center gap-1 hover:bg-gray-200">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                            導入還原
+                        <button onclick="triggerFileSelect()" class="skeuo-btn py-2 text-xs font-bold text-slate-700">
+                            導入還原檔
                         </button>
                     </div>
                     <input type="file" id="backup-file-input" onchange="importBackup(event)" accept=".json" class="hidden" />
-                    <p class="text-[10px] text-gray-400 mt-2 text-center">* 資料導出為 JSON 檔案，可在其他裝置上導入還原。</p>
                 </section>
-                <div class="mt-8">
-                    <button onclick="saveSettings()" class="bg-orange-500 text-black font-black uppercase tracking-wider px-4 py-2 flex items-center justify-center gap-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black w-full">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-                        儲存設定
+
+                <div class="pt-2">
+                    <button onclick="saveSettings()" class="skeuo-btn-cyan w-full py-3 rounded-xl font-extrabold text-sm uppercase">
+                        儲存設定變更
                     </button>
                 </div>
             </div>
@@ -193,124 +321,104 @@
     </div>
 
     <!-- --- Record Modal --- -->
-    <div id="record-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
-        <div id="record-modal-border" class="w-full max-w-md bg-white border-t-4 sm:border-4 p-6 animate-slide-up sm:animate-none">
-            <div class="flex justify-between items-center mb-6">
-                <h2 id="record-modal-title" class="text-2xl font-black uppercase flex items-center gap-2">
+    <div id="record-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+        <div id="record-modal-border" class="w-full max-w-md skeuo-card bg-[#e6e9ef] p-6 animate-slide-up sm:animate-none">
+            <div class="flex justify-between items-center mb-5 border-b border-slate-300 pb-3">
+                <h2 id="record-modal-title" class="text-base font-black text-slate-800 uppercase flex items-center gap-2">
                     <!-- JS 動態寫入 -->
                 </h2>
-                <button onclick="toggleRecordModal(false)" class="text-black">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                <button onclick="toggleRecordModal(false)" class="p-1.5 skeuo-btn text-slate-600">
+                    <svg class="w-4 h-4 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
+
             <div class="space-y-4">
                 <div>
-                    <label class="block font-bold text-sm mb-1">日期</label>
-                    <input type="date" id="record-date" class="w-full border-2 border-black p-3 font-bold bg-gray-50 focus:outline-none focus:bg-white" />
+                    <label class="block font-bold text-xs text-slate-600 mb-1 uppercase">日期</label>
+                    <input type="date" id="record-date" class="w-full skeuo-inset p-3 font-bold text-slate-800 text-sm focus:outline-none" />
                 </div>
-                <div class="flex gap-4">
+                
+                <div class="flex gap-2">
                     <div class="flex-1">
-                        <label class="block font-bold text-sm mb-1">天數</label>
-                        <input type="number" id="record-days" placeholder="0" class="w-full border-2 border-black p-3 font-bold bg-gray-50 focus:outline-none" />
+                        <label class="block font-bold text-xs text-slate-600 mb-1 uppercase">天數</label>
+                        <input type="number" id="record-days" placeholder="0" class="w-full skeuo-inset p-2.5 font-bold text-slate-800 text-sm focus:outline-none" />
                     </div>
                     <div class="flex-1">
-                        <label class="block font-bold text-sm mb-1">小時</label>
-                        <input type="number" id="record-hours" placeholder="0" class="w-full border-2 border-black p-3 font-bold bg-gray-50 focus:outline-none" />
+                        <label class="block font-bold text-xs text-slate-600 mb-1 uppercase">小時</label>
+                        <input type="number" id="record-hours" placeholder="0" class="w-full skeuo-inset p-2.5 font-bold text-slate-800 text-sm focus:outline-none" />
                     </div>
                     <div class="flex-1">
-                        <label class="block font-bold text-sm mb-1">分鐘</label>
-                        <input type="number" id="record-mins" placeholder="0" class="w-full border-2 border-black p-3 font-bold bg-gray-50 focus:outline-none" />
+                        <label class="block font-bold text-xs text-slate-600 mb-1 uppercase">分鐘</label>
+                        <input type="number" id="record-mins" placeholder="0" class="w-full skeuo-inset p-2.5 font-bold text-slate-800 text-sm focus:outline-none" />
                     </div>
                 </div>
+
                 <div>
-                    <label class="block font-bold text-sm mb-1 flex justify-between">
-                        備註說明
-                        <button onclick="generateAiNote()" class="text-xs text-purple-600 font-bold hover:text-purple-800 flex items-center gap-1">
-                            <span id="ai-note-icon">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-                            </span> ✨ 智慧優化
-                        </button>
-                    </label>
-                    <input type="text" id="record-note" placeholder="例：感冒、出國..." class="w-full border-2 border-black p-3 font-bold bg-gray-50 focus:outline-none" />
+                    <label class="block font-bold text-xs text-slate-600 mb-1 uppercase">備註說明</label>
+                    <input type="text" id="record-note" placeholder="例：感冒、出國..." class="w-full skeuo-inset p-3 font-bold text-slate-800 text-sm focus:outline-none" />
                 </div>
-                <div class="pt-4 grid grid-cols-2 gap-4">
-                    <button onclick="toggleRecordModal(false)" class="bg-white text-black font-bold px-4 py-2 flex items-center justify-center gap-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black">取消</button>
-                    <button onclick="saveRecord()" class="bg-orange-500 text-black font-black uppercase tracking-wider px-4 py-2 flex items-center justify-center gap-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black">確認</button>
+
+                <div class="pt-4 grid grid-cols-2 gap-3">
+                    <button onclick="toggleRecordModal(false)" class="skeuo-btn py-3 font-bold text-slate-600 text-sm">取消</button>
+                    <button onclick="saveRecord()" class="skeuo-btn-primary py-3 font-bold text-sm uppercase">確認送出</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- --- Report Modal --- -->
-    <div id="report-modal" class="fixed inset-0 bg-white z-[60] overflow-y-auto p-4 sm:p-8 hidden">
-        <div class="max-w-2xl mx-auto border-4 border-black min-h-screen sm:min-h-[auto] bg-white p-4">
-            <div class="flex justify-between items-center mb-8 border-b-4 border-black pb-4">
+    <div id="report-modal" class="fixed inset-0 bg-[#e6e9ef] z-[60] overflow-y-auto p-4 sm:p-8 hidden">
+        <div class="max-w-2xl mx-auto skeuo-card p-6 min-h-screen sm:min-h-[auto]">
+            <div class="flex justify-between items-center mb-6 border-b border-slate-300 pb-4">
                 <div>
-                    <h2 class="text-3xl font-black uppercase tracking-wider">年度特休報表</h2>
-                    <p id="report-generated-date" class="text-sm font-mono text-gray-500 mt-1">GENERATED ON --</p>
+                    <h2 class="text-2xl font-black text-slate-800 uppercase tracking-wide">年度特休統計報表</h2>
+                    <p id="report-generated-date" class="text-xs font-mono font-bold text-slate-500 mt-1">GENERATED ON --</p>
                 </div>
-                <button onclick="toggleReport(false)" class="bg-black text-white p-2 hover:bg-gray-800">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                <button onclick="toggleReport(false)" class="p-2.5 skeuo-btn text-slate-600">
+                    <svg class="w-5 h-5 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
 
-            <!-- AI Analysis Section -->
-            <div class="mb-8 border-2 border-purple-500 bg-purple-50 p-4 relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-2 text-purple-200">
-                    <svg class="w-12 h-12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-                </div>
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-black text-purple-900 flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/></svg>
-                        ✨ 智慧請假分析
-                    </h3>
-                    <button onclick="analyzeRecords()" class="px-3 py-1 bg-purple-600 text-white text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-2 border-black hover:bg-purple-500">
-                        <span id="ai-analyze-icon"></span> 開始分析
-                    </button>
-                </div>
-                <div id="ai-analysis-text" class="text-sm leading-relaxed text-purple-800 whitespace-pre-wrap font-medium">
-                    <span class="text-xs text-purple-400 italic">點擊按鈕，讓 AI 為您的假期規劃提供建議...</span>
-                </div>
-            </div>
-
             <!-- Report Summary -->
-            <div class="grid grid-cols-2 gap-4 mb-8">
-                <div class="border-2 border-black p-4 bg-gray-50">
-                    <div class="text-xs font-bold text-gray-500 uppercase">目前結餘 (Balance)</div>
-                    <div id="report-summary-balance" class="text-2xl font-black mt-1 text-orange-600">0d 0h 0m</div>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="skeuo-inset p-4">
+                    <div class="text-[10px] font-bold text-slate-500 uppercase">目前結餘 (Balance)</div>
+                    <div id="report-summary-balance" class="text-2xl font-black mt-1 text-amber-600">0d 0h 0m</div>
                 </div>
-                <div class="border-2 border-black p-4 bg-gray-50">
-                    <div class="text-xs font-bold text-gray-500 uppercase">總筆數 (Records)</div>
-                    <div id="report-summary-count" class="text-2xl font-black mt-1">0 筆</div>
+                <div class="skeuo-inset p-4">
+                    <div class="text-[10px] font-bold text-slate-500 uppercase">總筆數 (Records)</div>
+                    <div id="report-summary-count" class="text-2xl font-black mt-1 text-slate-700">0 筆</div>
                 </div>
             </div>
 
             <!-- Report Table -->
-            <div class="overflow-x-auto">
+            <div class="skeuo-inset overflow-hidden">
                 <table class="w-full border-collapse text-left text-sm font-mono">
                     <thead>
-                        <tr class="bg-black text-white">
-                            <th class="p-2 border border-black w-5/12">日期 / 摘要</th>
-                            <th class="p-2 border border-black text-right w-3/12">異動</th>
-                            <th class="p-2 border border-black text-right w-4/12">結餘</th>
+                        <tr class="bg-slate-300/60 text-slate-700 border-b border-slate-400/40">
+                            <th class="p-3 font-black">日期 / 摘要</th>
+                            <th class="p-3 text-right font-black">異動</th>
+                            <th class="p-3 text-right font-black">結餘</th>
                         </tr>
                     </thead>
-                    <tbody id="report-table-body">
+                    <tbody id="report-table-body" class="divide-y divide-slate-300/40">
                         <!-- 動態報表列置於此 -->
                     </tbody>
                 </table>
             </div>
-            <div class="mt-8 text-center text-xs text-gray-400 border-t-2 border-gray-200 pt-4">
+
+            <div class="mt-8 text-center text-xs font-bold text-slate-400 border-t border-slate-300 pt-4">
                 --- END OF REPORT ---
             </div>
         </div>
     </div>
 
-    <!-- --- JavaScript Controller --- -->
+    <!-- JavaScript Controller 保持完備業務邏輯 -->
     <script>
         // --- State 變數狀態 ---
         let onBoardDate = '';
         let workHoursPerDay = 8;
+        let gasWebUrl = '';
         let records = [];
         let rules = [
             { minYear: 0.5, maxYear: 1, days: 3 },
@@ -322,11 +430,6 @@
         ];
         
         let recordType = 'use';
-        let isGeneratingNote = false;
-        let isAnalyzing = false;
-        let aiAnalysis = "";
-
-        const apiKey = ""; // 系統自動填入
 
         // --- 核心邏輯計算 ---
         function calculateTenure() {
@@ -403,10 +506,10 @@
                 ? processedRecords[processedRecords.length - 1].balanceSnapshot 
                 : { d: 0, h: 0, m: 0 };
 
-            // 1. 更新頂端 Header 剩餘時數
+            // 1. Header 剩餘時數
             document.getElementById('header-remaining').innerText = `${currentBalance.d}d ${currentBalance.h}h ${currentBalance.m}m`;
 
-            // 2. 更新中央大圓牌
+            // 2. 中央 LCD 儀表
             const isNeg = currentBalance.d < 0;
             const negSign = document.getElementById('balance-neg-sign');
             if (isNeg) {
@@ -418,10 +521,10 @@
             document.getElementById('balance-hours').innerText = currentBalance.h;
             document.getElementById('balance-mins').innerText = currentBalance.m;
 
-            // 3. 更新員工資訊試算
-            document.getElementById('info-onboard-date').innerHTML = onBoardDate ? onBoardDate : `<button onclick="toggleSettings(true)" class="text-red-500 text-sm underline">點此設定</button>`;
+            // 3. 員工資訊試算
+            document.getElementById('info-onboard-date').innerHTML = onBoardDate ? onBoardDate : `<button onclick="toggleSettings(true)" class="text-amber-600 font-extrabold text-xs underline">點此設定</button>`;
             document.getElementById('info-tenure').innerText = tenure.text;
-            document.getElementById('info-entitlement').innerHTML = `${entitlementDays} <span class="text-sm font-bold">天</span>`;
+            document.getElementById('info-entitlement').innerHTML = `${entitlementDays} <span class="text-xs font-bold">天</span>`;
 
             const btnQuickAdd = document.getElementById('btn-quick-add');
             if (onBoardDate) {
@@ -430,12 +533,12 @@
                 btnQuickAdd.classList.add('hidden');
             }
 
-            // 4. 渲染歷史紀錄清單
+            // 4. 歷史紀錄清單
             const historyContainer = document.getElementById('history-container');
             if (processedRecords.length === 0) {
                 historyContainer.innerHTML = `
-                    <div class="text-center py-8 text-gray-400 font-bold bg-white border-2 border-dashed border-gray-300">
-                        尚無紀錄
+                    <div class="text-center py-8 text-slate-400 font-bold skeuo-inset">
+                        尚無任何紀錄
                     </div>
                 `;
             } else {
@@ -445,35 +548,35 @@
                     const rHrs = Math.floor((r.rawMinutes || 0) / 60);
                     const rMins = (r.rawMinutes || 0) % 60;
                     return `
-                        <div class="bg-white border-2 border-black p-3 shadow-[3px_3px_0px_0px_rgba(0,0,0,0.15)] animate-slide-up">
+                        <div class="skeuo-card p-4 animate-slide-up">
                             <div class="flex justify-between items-start mb-2">
                                 <div class="flex items-start gap-3">
-                                    <div class="p-2 border-2 border-black ${isAdd ? 'bg-orange-500 text-black' : 'bg-black text-white'}">
+                                    <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold ${isAdd ? 'bg-orange-100 text-orange-600 shadow-inner' : 'bg-slate-200 text-slate-600 shadow-inner'}">
                                         ${isAdd ? 
-                                            `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>` : 
-                                            `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"/></svg>`
+                                            `<svg class="w-4 h-4 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>` : 
+                                            `<svg class="w-4 h-4 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"/></svg>`
                                         }
                                     </div>
                                     <div>
-                                        <div class="font-bold text-sm">${r.note}</div>
-                                        <div class="text-xs text-gray-500 font-mono">${r.date}</div>
+                                        <div class="font-bold text-sm text-slate-800 leading-tight">${r.note}</div>
+                                        <div class="text-[11px] text-slate-400 font-mono font-semibold mt-1">${r.date}</div>
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <div class="font-black text-lg ${isAdd ? 'text-orange-600' : 'text-black'}">
+                                    <div class="font-black text-base ${isAdd ? 'text-orange-600' : 'text-slate-700'} font-mono">
                                         ${isAdd ? '+' : '-'}
                                         ${rDays > 0 ? `${rDays}d ` : ''}
                                         ${(rHrs > 0 || rMins > 0) ? `${rHrs}h` : ''}
                                         ${rMins > 0 ? ` ${rMins}m` : ''}
                                     </div>
-                                    <button onclick="deleteRecord(${r.id})" class="text-xs text-red-400 underline hover:text-red-600 mt-1">
-                                        刪除
+                                    <button onclick="deleteRecord(${r.id})" class="text-[10px] font-bold text-red-500 hover:text-red-700 mt-1">
+                                        刪除紀錄
                                     </button>
                                 </div>
                             </div>
-                            <div class="mt-2 pt-2 border-t border-dashed border-gray-300 flex justify-end items-center gap-2">
-                                <span class="text-[10px] text-gray-400 font-bold uppercase">結餘</span>
-                                <span class="font-mono text-sm font-bold text-gray-700">
+                            <div class="mt-3 pt-2 border-t border-slate-300/60 flex justify-end items-center gap-2">
+                                <span class="text-[10px] text-slate-400 font-bold uppercase">累積結餘</span>
+                                <span class="font-mono text-xs font-bold text-slate-700 px-2 py-0.5 skeuo-inset">
                                     ${r.balanceSnapshot.d}d ${r.balanceSnapshot.h}h ${r.balanceSnapshot.m > 0 ? `${r.balanceSnapshot.m}m` : ''}
                                 </span>
                             </div>
@@ -484,12 +587,13 @@
             }
         }
 
-        // --- Modal 管理控制器 ---
+        // --- Modal 控制器 ---
         window.toggleSettings = function(show) {
             const modal = document.getElementById('settings-modal');
             if (show) {
                 document.getElementById('settings-onboard').value = onBoardDate;
                 document.getElementById('settings-hours').value = workHoursPerDay;
+                document.getElementById('settings-gas-url').value = gasWebUrl;
                 modal.classList.remove('hidden');
             } else {
                 modal.classList.add('hidden');
@@ -506,10 +610,9 @@
                 document.getElementById('report-summary-balance').innerText = `${currentBalance.d}d ${currentBalance.h}h ${currentBalance.m}m`;
                 document.getElementById('report-summary-count').innerText = `${records.length} 筆`;
                 
-                // 渲染報表 Table
                 const tbody = document.getElementById('report-table-body');
                 if (processed.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="3" class="p-8 text-center border border-black text-gray-400">尚無資料</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-slate-400 font-bold">尚無資料</td></tr>`;
                 } else {
                     tbody.innerHTML = [...processed].reverse().map((r, idx) => {
                         const isAdd = r.type === 'add';
@@ -517,33 +620,25 @@
                         const rHrs = Math.floor((r.rawMinutes || 0) / 60);
                         const rMins = (r.rawMinutes || 0) % 60;
                         return `
-                            <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">
-                                <td class="p-2 border border-black align-top">
-                                    <div class="font-bold text-base mb-1">${r.date}</div>
-                                    <div class="flex items-start gap-2 text-sm text-gray-600">
-                                        <span class="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full font-black text-xs ${isAdd ? 'bg-orange-500 text-black' : 'bg-black text-white'}">
+                            <tr class="${idx % 2 === 0 ? 'bg-slate-100/50' : 'bg-transparent'}">
+                                <td class="p-3 align-top">
+                                    <div class="font-bold text-slate-800 text-sm mb-0.5">${r.date}</div>
+                                    <div class="flex items-start gap-1.5 text-xs text-slate-600">
+                                        <span class="font-black ${isAdd ? 'text-orange-500' : 'text-slate-500'}">
                                             ${isAdd ? '+' : '-'}
                                         </span>
                                         <span>${r.note}</span>
                                     </div>
                                 </td>
-                                <td class="p-2 border border-black text-right font-bold align-top whitespace-nowrap ${isAdd ? 'text-orange-600' : 'text-black'}">
+                                <td class="p-3 text-right font-bold align-top whitespace-nowrap ${isAdd ? 'text-orange-600' : 'text-slate-700'}">
                                     ${isAdd ? '+' : '-'}${rDays > 0 ? `${rDays}d` : ''}${(rHrs > 0 || rMins > 0) ? ` ${rHrs}h` : ''}${rMins > 0 ? `:${rMins}` : ''}
                                 </td>
-                                <td class="p-2 border border-black text-right align-top whitespace-nowrap text-gray-500">
+                                <td class="p-3 text-right align-top whitespace-nowrap font-bold text-slate-700">
                                     ${r.balanceSnapshot.d}d ${r.balanceSnapshot.h}h
                                 </td>
                             </tr>
                         `;
                     }).join('');
-                }
-
-                // 渲染 AI 分析文本
-                const analysisText = document.getElementById('ai-analysis-text');
-                if (aiAnalysis) {
-                    analysisText.innerHTML = aiAnalysis;
-                } else {
-                    analysisText.innerHTML = `<span class="text-xs text-purple-400 italic">點擊按鈕，讓 AI 為您的假期規劃提供建議...</span>`;
                 }
 
                 modal.classList.remove('hidden');
@@ -564,22 +659,17 @@
         window.openRecordModal = function(type) {
             recordType = type;
             
-            // 重置輸入框
             document.getElementById('record-date').value = new Date().toISOString().split('T')[0];
             document.getElementById('record-days').value = '';
             document.getElementById('record-hours').value = '';
             document.getElementById('record-mins').value = '';
             document.getElementById('record-note').value = '';
 
-            // 修改 Modal 主視覺
             const title = document.getElementById('record-modal-title');
-            const border = document.getElementById('record-modal-border');
             if (type === 'add') {
-                title.innerHTML = `<span class="text-orange-500"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg></span> 新增/獲得`;
-                border.className = "w-full max-w-md bg-white border-t-4 border-orange-500 sm:border-4 sm:border-orange-500 p-6 animate-slide-up sm:animate-none";
+                title.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]"></span> 新增/獲得特休`;
             } else {
-                title.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"/></svg> 使用特休`;
-                border.className = "w-full max-w-md bg-white border-t-4 border-black sm:border-4 sm:border-black p-6 animate-slide-up sm:animate-none";
+                title.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></span> 登記使用特休`;
             }
 
             toggleRecordModal(true);
@@ -588,6 +678,7 @@
         window.saveSettings = function() {
             onBoardDate = document.getElementById('settings-onboard').value;
             workHoursPerDay = parseInt(document.getElementById('settings-hours').value) || 8;
+            gasWebUrl = document.getElementById('settings-gas-url').value.trim();
             saveToStorage();
             toggleSettings(false);
         };
@@ -642,57 +733,53 @@
             }
         };
 
-        // --- AI 功能服務 ---
-        window.generateAiNote = async function() {
-            const noteInput = document.getElementById('record-note');
-            const noteVal = noteInput.value.trim();
-            if (!noteVal) return;
+        // --- 備份管理與 GAS 自動上傳 ---
+        function setSyncStatus(text, colorClass = "text-slate-600") {
+            const el = document.getElementById('sync-status');
+            if (el) {
+                el.innerText = text;
+                el.className = `text-[10px] font-bold font-mono px-2 py-0.5 rounded-full skeuo-inset inline-block ${colorClass}`;
+            }
+        }
 
-            isGeneratingNote = true;
-            document.getElementById('ai-note-icon').innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>`;
+        async function syncToGas(dataToSave) {
+            if (!gasWebUrl) {
+                setSyncStatus('未設定 GAS 網址', 'text-slate-500');
+                return;
+            }
+
+            setSyncStatus('☁️ 自動同步中...', 'text-amber-600 animate-pulse');
 
             try {
-                const prompt = `使用者輸入了這個請假/入帳摘要關鍵字：「${noteVal}」。請將其轉換成一段簡短、體面、專業的備註（不超過 15 個字）。如果是請假，語氣要委婉；如果是獲得假期，請說明原因。`;
-                const systemMsg = "你是一個專業的人事行政助理，擅長撰寫精簡的假別備註。只輸出備註文字，不要有額外對話。";
-                const result = await callGemini(prompt, systemMsg);
-                noteInput.value = result.trim().replace(/^"|"$/g, '');
-            } catch (e) {
-                console.error("AI Note generation failed", e);
-            } finally {
-                isGeneratingNote = false;
-                document.getElementById('ai-note-icon').innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>`;
-            }
-        };
-
-        window.analyzeRecords = async function() {
-            isAnalyzing = true;
-            document.getElementById('ai-analyze-icon').innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>`;
-            
-            try {
-                const processed = getProcessedRecords();
-                const currentBalance = processed.length > 0 ? processed[processed.length - 1].balanceSnapshot : { d: 0, h: 0, m: 0 };
-                const summary = processed.map(r => `${r.date} ${r.type === 'add' ? '+' : '-'}${r.rawDays}d : ${r.note}`).join('\n');
+                const response = await fetch(gasWebUrl, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(dataToSave)
+                });
                 
-                const prompt = `這是我的特休紀錄：\n${summary}\n目前餘額：${currentBalance.d}天${currentBalance.h}小時。\n請針對我的請假規律進行簡短分析，並給予一個關於工作平衡或假期規劃的具體建議。請用繁體中文。`;
-                const systemMsg = "你是一個資深的職涯與健康顧問。你的風格是幽默、富有洞察力且溫暖的。分析要短而精煉。";
-                
-                const result = await callGemini(prompt, systemMsg);
-                aiAnalysis = result;
-            } catch (e) {
-                aiAnalysis = "分析失敗，請檢查網路連線或稍後再試。";
-            } finally {
-                isAnalyzing = false;
-                document.getElementById('ai-analyze-icon').innerHTML = '';
-                toggleReport(true); // 重新渲染報表
-            }
-        };
+                const resText = await response.text();
+                let resJson;
+                try { resJson = JSON.parse(resText); } catch(e){}
 
-        // --- 備份管理 ---
+                if (response.ok && (resJson?.status === 'success' || resText.includes('success'))) {
+                    const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    setSyncStatus(`✓ 已於 ${nowStr} 備份`, 'text-emerald-600');
+                } else {
+                    setSyncStatus('✖ 備份失敗', 'text-red-500');
+                }
+            } catch (err) {
+                console.error('GAS Backup Sync Error:', err);
+                setSyncStatus('✖ 備份連線失敗', 'text-red-500');
+            }
+        }
+
         window.exportBackup = function() {
             const backupData = {
                 version: "v2-backup",
                 onBoardDate,
                 workHoursPerDay,
+                gasWebUrl,
                 records,
                 rules,
                 exportedAt: new Date().toISOString()
@@ -725,6 +812,7 @@
                     if (confirm("確認導入備份？這將會覆蓋您目前在此瀏覽器中的所有紀錄！")) {
                         onBoardDate = importedData.onBoardDate || '';
                         workHoursPerDay = importedData.workHoursPerDay || 8;
+                        gasWebUrl = importedData.gasWebUrl || gasWebUrl;
                         rules = importedData.rules || rules;
                         records = importedData.records || [];
                         saveToStorage();
@@ -738,15 +826,17 @@
             reader.readAsText(fileObj);
         };
 
-        // --- 資料保存與讀取 (加入安全預防機制) ---
+        // --- 資料保存與讀取 ---
         function saveToStorage() {
-            const dataToSave = { onBoardDate, workHoursPerDay, records, rules };
+            const dataToSave = { onBoardDate, workHoursPerDay, gasWebUrl, records, rules };
             try {
                 localStorage.setItem('leaveOpsData_v2', JSON.stringify(dataToSave));
             } catch(e) {
-                console.warn("localStorage is blocked in this environment (likely GitHub iframe).", e);
+                console.warn("localStorage is blocked in this environment.", e);
             }
             updateUI();
+            
+            syncToGas(dataToSave);
         }
 
         function loadFromStorage() {
@@ -756,10 +846,10 @@
                     const parsed = JSON.parse(savedData);
                     onBoardDate = parsed.onBoardDate || '';
                     workHoursPerDay = parsed.workHoursPerDay || 8;
+                    gasWebUrl = parsed.gasWebUrl || '';
                     rules = parsed.rules || rules;
                     
                     let loadedRecords = parsed.records || [];
-                    // 跨版本相容
                     if (loadedRecords.length > 0 && loadedRecords[0].rawDays === undefined) {
                         loadedRecords = loadedRecords.map(r => {
                             const totalMins = r.minutes || 0;
@@ -783,9 +873,12 @@
         window.onload = function() {
             loadFromStorage();
             updateUI();
+            if (gasWebUrl) {
+                setSyncStatus('✓ 備份服務已連結', 'text-emerald-600');
+            } else {
+                setSyncStatus('未設定 GAS 網址', 'text-slate-500');
+            }
         };
     </script>
 </body>
 </html>
-
-```
